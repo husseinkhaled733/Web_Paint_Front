@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
 
-    let width = window.innerWidth * (80 / 100);
+    let width = window.innerWidth * (82 / 100);
     let height = window.innerHeight * (95 / 100);
     this.stage = new Konva.Stage({
       container: 'board',
@@ -349,6 +349,7 @@ export class AppComponent implements OnInit {
         newShape.id(responseData['id']);
         newShape.draggable(false);
         this.layer.add(newShape).batchDraw();
+        this.selectedShape=null;
       });
       this.layer.getChildren().forEach(function (node: any) {
         node.draggable(false);
@@ -509,6 +510,9 @@ export class AppComponent implements OnInit {
   }
 
   public load(event:any){
+    this.layer.removeChildren();
+    this.transform = new Konva.Transformer(); 
+    this.layer.add(this.transform);
     this.currentSelector = "screen";
     if (this.selectedFiles) {
       const file: File | null = this.selectedFiles.item(0);
@@ -517,10 +521,15 @@ export class AppComponent implements OnInit {
         this.currentFile = file;
 
         this.service.load(this.currentFile).subscribe(responseData=>{
+          console.log(responseData);
           let x=responseData['children'];
+          console.log(x);
           let y = x['0'];
+          console.log(y);
           let z = y['children'];
+          console.log(z);
           let arr = <Array<any>>z;
+          console.log(arr);
           for(let i=0;i<arr.length;i++) {
             if(i === 0) continue;
             let shape = arr[i]['attrs'];
