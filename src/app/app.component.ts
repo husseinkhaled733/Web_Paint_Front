@@ -21,7 +21,6 @@ export class AppComponent implements OnInit {
   color: string = "black";
   size = 5;
   selectedShape: any;
-  log = console.log;
   selectedFiles?: FileList;
   currentFile?: File;
   message = '';
@@ -29,6 +28,8 @@ export class AppComponent implements OnInit {
   form = "JSON";
   pop = false;
   selected=false;
+  log = console.log;
+
   constructor(private service: ShapeService) {}
 
   ngOnInit(): void {
@@ -45,22 +46,20 @@ export class AppComponent implements OnInit {
     this.layer.add(this.transform);
     this.stage.add(this.layer);
 
-    this.service.refresh().subscribe(responseData => {
-      if (responseData === null) {
-        console.log("cannot refresh");
-        return;
-      }
-      let tempShape = responseData['shapes'];
-      let operation = responseData['operation'];
-      let arr = <Array<any>>tempShape;
-      arr.forEach((shape) => {
-        console.log(shape);
-        this.processOperation("CREATE", shape);
-      });
-      this.layer.getChildren().forEach(function (node: any) {
-        node.draggable(false);
-      });
-    })
+    // this.service.refresh().subscribe(responseData => {
+    //   if (responseData === null) {
+    //     console.log("cannot refresh");
+    //     return;
+    //   }
+    //   let tempShape = responseData['shapes'];
+    //   let arr = <Array<any>>tempShape;
+    //   arr.forEach((shape) => {
+    //     this.processOperation("CREATE", shape);
+    //   });
+    //   this.layer.getChildren().forEach(function (node: any) {
+    //     node.draggable(false);
+    //   });
+    // })
 
     this.stage.on("click", (event: any) => {
       if (this.currentSelector !== "screen") {
@@ -71,27 +70,18 @@ export class AppComponent implements OnInit {
         node.draggable(false);
       });
       let id = event.target.attrs.id;
-      this.selectedShape = event.target;
-      console.log("click triggered");
-      console.log("id of selected shape = " + id);
+      
       if (id != undefined) {
         let shape = event.target;
-        
+        this.selectedShape = event.target;
         this.transform.nodes([shape]);
         shape.draggable(true);
 
-        shape.on('transformstart', function () {
-          console.log('transform start' + shape);
-        });
+        shape.on('dragmove', ()=> {
+          console.log(shape.x());
+        })
 
-        shape.on('dragmove', function () {
-          console.log("moving shape" + shape);
-        });
-        shape.on('transform', function () {
-          console.log('transform' + shape);
-        });
-
-        shape.on('transformend', () => {
+        shape.on('transformend', () => {   
           this.service.updateShape(shape.toJSON());
         });
 
@@ -101,6 +91,8 @@ export class AppComponent implements OnInit {
 
       } else {
         this.transform.nodes([]);
+        this.currentSelector = "screen";
+        this.selectedShape = "";
       }
     });
 
@@ -121,10 +113,11 @@ export class AppComponent implements OnInit {
     this.stage.off('mouseup');
     this.stage.off('mousemove');
     this.transform.nodes([]);
-
+    this.layer.getChildren().forEach(function (node: any) {
+      node.draggable(false);
+    });
 
     let type = this.getType(event);
-    console.log(type);
     if (this.lastEvent != null) {
       this.lastEvent.target.style.background = "#ffffff";
     }
@@ -133,9 +126,6 @@ export class AppComponent implements OnInit {
     if (this.currentSelector != type) {
       this.currentSelector = type;
       event.target.style.background = "#62666846";
-      this.layer.getChildren().forEach(function (node: any) {
-        node.draggable(false);
-      });
     } else {
       this.currentSelector = "screen";
       event.target.style.background = "#ffffff";
@@ -203,10 +193,7 @@ export class AppComponent implements OnInit {
     this.stage.on("mouseup", () => {
       isNowDrawing = false;
       shape.setAttr('type', type);
-      // console.log(shape.toJSON());
       this.generateID(shape);
-      console.log("Done initializing " + type);
-      console.log("color is " + shape.stroke())
     });
 
   }
@@ -217,27 +204,26 @@ export class AppComponent implements OnInit {
     this.stage.off('mouseup');
     this.stage.off('mousemove');
     this.transform.nodes([]);
-    console.log(this.color);
+    this.layer.getChildren().forEach(function (node: any) {
+      node.draggable(false);
+    });
 
     if (this.lastEvent != null) {
       this.lastEvent.target.style.background = "#ffffff";
     }
     this.lastEvent = event;
 
-    let line: any;
-    let isNowDrawing = false;
-
     if (this.currentSelector != "FreeHand") {
       this.currentSelector = "FreeHand";
       event.target.style.background = "#62666846";
-      this.layer.getChildren().forEach(function (node: any) {
-        node.draggable(false);
-      });
     } else {
       this.currentSelector = "screen";
       event.target.style.background = "#ffffff";
       return;
     }
+
+    let line: any;
+    let isNowDrawing = false;
 
     this.stage.on("mousedown", () => {
       console.log(this.color);
@@ -266,7 +252,6 @@ export class AppComponent implements OnInit {
       isNowDrawing = false;
       line.setAttr('type', "LineSegment");
       this.generateID(line);
-      console.log("Done initializing FreeHand");
     });
 
   }
@@ -277,26 +262,26 @@ export class AppComponent implements OnInit {
     this.stage.off('mouseup');
     this.stage.off('mousemove');
     this.transform.nodes([]);
+    this.layer.getChildren().forEach(function (node: any) {
+      node.draggable(false);
+    });
 
     if (this.lastEvent != null) {
       this.lastEvent.target.style.background = "#ffffff";
     }
     this.lastEvent = event;
 
-    let line: any;
-    let isNowDrawing = false;
-
     if (this.currentSelector != "line") {
       this.currentSelector = "line";
       event.target.style.background = "#62666846";
-      this.layer.getChildren().forEach(function (node: any) {
-        node.draggable(false);
-      });
     } else {
       this.currentSelector = "screen";
       event.target.style.background = "#ffffff";
       return;
     }
+
+    let line: any;
+    let isNowDrawing = false;
 
     this.stage.on("mousedown", () => {
       line = new Konva.Line();
@@ -325,64 +310,36 @@ export class AppComponent implements OnInit {
       isNowDrawing = false;
       line.setAttr('type', "LineSegment");
       this.generateID(line);
-      console.log("Done initialzing Line")
     });
 
   }
 
-  public fill(event: any) {
-    const btn = document.getElementById('in');
-    if (this.colorEvent != null) {
-      console.log(this.lastEvent);
-      this.colorEvent.target.style.opacity = 1;
-    }
-    this.colorEvent = event;
-    if (this.color !== event.target.style.background) {
-      this.color = event.target.style.background.toString();
-      if (btn !== null) {
-        btn.style.color = this.color;
-      }
-      event.target.style.opacity = 0.5;
-      this.layer.getChildren().forEach(function (node: any) {
-        node.draggable(false);
-      });
-    } else {
-      this.color = "black";
-      event.target.style.opacity = 1;
-      return;
-    }
-    console.log(this.color);
+  public fillshape(event : any) {
 
-  }
-
-  public fillshape() {
-    this.currentSelector = "";
-    this.stage.off('mousedown mouseup mousemove');
-    this.stage.on("mousedown", (event: any) => {
-      event.target.fill(this.color);
-      let shape = event.target;
-      this.service.updateShape(shape.toJSON());
-    });
-  }
-
-  public changeState(event: any) {
     if (this.lastEvent != null) {
       this.lastEvent.target.style.background = "#ffffff";
     }
     this.lastEvent = event;
 
-
-    if (this.currentSelector != "edit") {
-      this.currentSelector = "edit";
+    if (this.currentSelector != "fillShape") {
+      this.currentSelector = "fillShape";
       event.target.style.background = "#62666846";
       this.layer.getChildren().forEach(function (node: any) {
         node.draggable(false);
       });
+      this.stage.off('mousedown mouseup mousemove');
+      this.stage.on("mousedown", (event: any) => {
+        if(event.target.attrs.id != undefined) {
+          event.target.fill(this.color);
+          let shape = event.target;
+          this.service.updateShape(shape.toJSON());
+        }
+      });
     } else {
       this.currentSelector = "screen";
       event.target.style.background = "#ffffff";
-      return;
     }
+
   }
 
   public copy() {
@@ -390,15 +347,13 @@ export class AppComponent implements OnInit {
       let newShape = this.selectedShape.clone();
       this.service.copyShape(this.selectedShape.id()).subscribe(responseData => {
         newShape.id(responseData['id']);
-        console.log("first shape" + this.selectedShape.id());
-        console.log("second shape" + newShape.id());
-        this.selectedShape = newShape;
+        newShape.draggable(false);
         this.layer.add(newShape).batchDraw();
-        this.transform.nodes([newShape]);
       });
       this.layer.getChildren().forEach(function (node: any) {
         node.draggable(false);
       });
+      this.transform.nodes([]);
     }
   }
 
@@ -425,12 +380,14 @@ export class AppComponent implements OnInit {
       let tempShape = responseData['shapes'];
       let operation = responseData['operation'];
       let arr = <Array<any>>tempShape;
-
-      console.log(operation);
       arr.forEach((shape) => {
         this.processOperation(operation, shape);
       });
     })
+    this.layer.getChildren().forEach(function (node: any) {
+      node.draggable(false);
+    });
+    this.transform.nodes([]);
   }
 
   public redo() {
@@ -439,6 +396,7 @@ export class AppComponent implements OnInit {
         console.log("cannot redo");
         return;
       }
+      console.log(responseData);
       let tempShape = responseData['shapes'];
       let operation = responseData['operation'];
       let arr = <Array<any>>tempShape;
@@ -448,6 +406,10 @@ export class AppComponent implements OnInit {
         this.processOperation(operation, shape);
       });
     })
+    this.layer.getChildren().forEach(function (node: any) {
+      node.draggable(false);
+    });
+    this.transform.nodes([]);
   }
 
   public clear() {
@@ -456,37 +418,26 @@ export class AppComponent implements OnInit {
     this.transform = new Konva.Transformer(); 
     this.layer.add(this.transform);
     this.currentSelector = "screen";
-    this.layer.getChildren().forEach(function (node: any) {
-      node.draggable(false);
-    });
   }
 
   public processOperation(type: string, shape: any) {
     if (type === "CREATE") {
-      let kind = shape['type'];
-      this.layer.add(this.getObject(kind, shape)).batchDraw();
-      this.transform.nodes([]);
+      this.layer.add(this.getObject(shape['type'], shape)).batchDraw();
     } else if (type === "UPDATE") {
       let id = shape['id'];
       let op = this.stage.findOne("#" + id.toString());
+      op.remove();
       op.destroy();
-      this.layer.add(this.getObject(shape['type'], shape)).batchDraw();
-      this.transform.nodes([]);
-      console.log(this.layer);
+      let o = this.getObject(shape['type'], shape);
+      this.layer.add(o).batchDraw();
     } else if (type === "DELETE") {
       let id = shape['id'];
       let op = this.stage.findOne("#" + id.toString());
-      this.transform.nodes([]);
       op.remove();
       op.destroy();
-      console.log(op);
     } else if(type === "CLEAR") {
       this.clear();
-      this.transform.nodes([]);
     }
-    this.layer.getChildren().forEach(function (node: any) {
-      node.draggable(false);
-    });
   }
 
   //get type
@@ -517,24 +468,6 @@ export class AppComponent implements OnInit {
     return type;
   }
 
-  // public save(event: any) {
-  //   //this.changeState(event);
-  //   this.log(event);
-  //   this.log(this.form);
-  //   let x=prompt("Please enter the file name");
-  //   if (x == null || x == "") {
-  //     this.filename="";
-  //   }
-  //   else{
-  //     this.filename=x;
-  //   }
-  //   console.log(this.stage.toJSON());
-  //   this.service.save(this.stage.toJSON(),this.form,this.filename).subscribe(response=>{
-  //     this.download(response);
-  //   });
-  //   console.log("done");
-  // }
-
   public chooseFile(event : any) {
     this.pop = false;
     let val = event.target.value;
@@ -550,7 +483,6 @@ export class AppComponent implements OnInit {
     this.service.save(this.stage.toJSON(),this.form,this.filename).subscribe(response=>{
       this.download(response);
     });
-    console.log("done");
   }
 
   public save(event : any) {
@@ -567,11 +499,9 @@ export class AppComponent implements OnInit {
     document.body.removeChild(link);
   }
 
-
   public delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
   }
-
 
   public selectFile(event: any): void {
     this.selectedFiles = event.target.files;
