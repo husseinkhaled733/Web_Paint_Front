@@ -21,7 +21,7 @@
     background-color: rgba(28, 47, 64, 0.318);
     margin-left: 10px;
     height: 180px;
-    width: 215px;
+    width: 95%;
     border-radius: 20px;
 }
 .title {
@@ -46,7 +46,7 @@
 }
 .colors button{
     background-color: rgb(255, 255, 255);
-    font-size: 20px;
+    font-size: larger;
     font-family: Tahoma;
     width: max-content;
     height: max-content;
@@ -88,7 +88,7 @@ span{
 }
 .colors td{
     font-family: Tahoma;
-    padding-left: 10px;
+    padding-left: 5px;
     padding-top: 20px;
     padding-bottom: 5px;
 }
@@ -160,7 +160,6 @@ i{
     bottom: 0px;
     width: 300px;
     height: 270px;
-    display: inline-block;
     overflow: hidden;
     border-radius: 5%;
 }
